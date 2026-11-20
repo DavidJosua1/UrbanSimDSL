@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UrbanSimDSL · Simulador 3D</title>
+<style>
+:root{--bg:#eef1f5;--fg:#1d2733;--pan:rgba(255,255,255,.9);--bd:#c9d1dc;--ac:#1a6fd4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1520;--fg:#e6ebf1;--pan:rgba(22,29,40,.9);--bd:#33404f;--ac:#5aa2ff}}
+:root[data-theme="dark"]{--bg:#0f1520;--fg:#e6ebf1;--pan:rgba(22,29,40,.9);--bd:#33404f;--ac:#5aa2ff}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--fg);font:14px/1.35 system-ui,sans-serif;overflow:hidden}
+#c{position:absolute;inset:0}
+#c canvas{display:block;touch-action:none}
+.p{position:absolute;background:var(--pan);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;backdrop-filter:blur(4px)}
+#bar{left:8px;right:8px;top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#hud{left:8px;bottom:8px;min-width:190px;font-variant-numeric:tabular-nums}
+button,select,label.b{font:inherit;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;cursor:pointer}
+button:hover,label.b:hover{border-color:var(--ac)}
+#hud b{color:var(--ac)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+#msg{color:#d33}
+</style>
+</head>
+<body>
+<div id="c"></div>
+<div id="bar" class="p">
+  <strong>UrbanSimDSL</strong>
+  <button id="play">⏸ Pausa</button>
+  <select id="spd"><option value="1">×1</option><option value="10" selected>×10</option><option value="30">×30</option><option value="60">×60</option></select>
+  <button id="rst">↺ Reiniciar</button>
+  <button id="zi">＋</button><button id="zo">－</button>
+  <label class="b">Cargar JSON<input id="file" type="file" accept=".json,application/json" hidden></label>
+  <button id="ej">Ejemplo</button>
+  <span id="msg"></span>
+</div>
+<div id="hud" class="p"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ===== Ejemplo: mismo formato que genera el compilador (version 1.0) ===== */
+const EJEMPLO={version:"1.0",variables:{},escenario:{nombre:"Simulacion_UNA",mapa:"UNA_Puno_3D",
+vias:[{id:"Av_Universitaria",tipo:"avenida",puntos:[[100,0,200],[250,0,200],[400,0,250]],carriles:2,ancho_carril_m:3.5,sentido:"doble",velocidad_max_kmh:40},
+{id:"Jr_Puno",tipo:"calle",puntos:[[250,0,60],[250,0,200]],carriles:1,ancho_carril_m:3.5,sentido:"unico",velocidad_max_kmh:30}],
+intersecciones:[{id:"Interseccion_Central",posicion:[250,0,200],conecta:["Av_Universitaria","Jr_Puno"]}],
+semaforos:[{id:"Semaforo_Central",interseccion:"Interseccion_Central",ciclo_s:65,fases:[{nombre:"verde",duracion_s:30},{nombre:"amarillo",duracion_s:5},{nombre:"rojo",duracion_s:30}]}],
+puentes:[{id:"Puente_Floral",tipo:"vehicular",posicion:[330,6,225],orientacion_grados:15,geometria:{longitud_m:60,ancho_m:10,altura_m:6},estructura:{tablero_m:0.5,apoyos:3}}],
+edificios:[{id:"Biblioteca",posicion:[180,0,150],dimensiones:{largo_m:30,ancho_m:18,altura_m:14},rotacion_grados:0},{id:"Facultad",posicion:[330,0,150],dimensiones:{largo_m:40,ancho_m:25,altura_m:12},rotacion_grados:20}],
+demandas:[{id:"Hora_Punta",via:"Av_Universitaria",flujo_veh_h:800,composicion_pct:{autos:70,buses:15,motos:10,camiones:5},inicio_s:0,duracion_s:3600},
+{id:"Calle",via:"Jr_Puno",flujo_veh_h:300,composicion_pct:{autos:80,motos:20},inicio_s:0,duracion_s:3600}],
+eventos:[{id:"Accidente_01",tipo:"accidente",via:"Av_Universitaria",carril:1,inicio_s:600,duracion_s:300}],
+clima:{estado:"lluvia",intensidad:"media",visibilidad_pct:70},simulacion:{duracion_s:3600,intervalo_s:1,repeticiones:1}}};
+
+/* ===== MOTOR DE SIMULACION (independiente de Three.js, portable a TypeScript) ===== */
+const TIPOS={autos:{l:4.2,w:1.8,h:1.5,c:0x3b82f6,f:1},buses:{l:11,w:2.5,h:3,c:0xf59e0b,f:.9},motos:{l:2,w:.8,h:1.2,c:0x10b981,f:1.1},camiones:{l:8,w:2.4,h:3,c:0x9ca3af,f:.85}};
+const IDM={a:1.5,b:2.2,T:1.2,s0:2};
+let W=null;
+
+function crearMundo(j){
+  const e=j.escenario, w={t:0,vias:{},sem:[],dem:[],obs:[],veh:[],evAct:[],salidos:0};
+  for(const d of e.vias||[]){
+    const P=d.puntos||[],cum=[0];
+    for(let i=1;i<P.length;i++)cum.push(cum[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][2]-P[i-1][2]));
+    const nc=d.carriles||2,doble=d.sentido==="doble";
+    w.vias[d.id]={d,P,cum,L:cum[cum.length-1]||1,anc:d.ancho_carril_m||3.5,nc,doble,nl:doble?Math.max(1,Math.ceil(nc/2)):nc,v0:(d.velocidad_max_kmh||40)/3.6,sig:[]};
+  }
+  for(const i of e.intersecciones||[]){
+    const s=(e.semaforos||[]).find(x=>x.interseccion===i.id);
+    if(!s)continue;
+    const f=s.fases||[],tot=f.reduce((a,x)=>a+x.duracion_s,0)||s.ciclo_s||1;
+    const S={id:s.id,pos:i.posicion,f,tot,state:"verde"};
+    w.sem.push(S);
+    for(const id of i.conecta||[]){const v=w.vias[id];if(v)v.sig.push({S,sStop:proyectar(v,i.posicion)});}
+  }
+  for(const d of e.demandas||[]){
+    const v=w.vias[d.via];if(!v)continue;
+    w.dem.push({v,rate:(d.flujo_veh_h||0)/3600,comp:Object.entries(d.composicion_pct||{autos:100}),t0:d.inicio_s||0,t1:(d.inicio_s||0)+(d.duracion_s||1e9),acc:Math.random()});
+  }
+  for(const x of e.eventos||[]){
+    const v=w.vias[x.via];
+    if(v&&x.tipo==="accidente")w.obs.push({v,lane:Math.max(0,(x.carril||1)-1)%v.nl,s:v.L*.5,t0:x.inicio_s||0,t1:(x.inicio_s||0)+(x.duracion_s||0),id:x.id});
+  }
+  w.fin=(e.simulacion&&e.simulacion.duracion_s)||3600;
+  return w;
+}
+function proyectar(v,p){ // arco s del punto de la via mas cercano a p
+  let best=1e9,bs=0;
+  for(let i=1;i<v.P.length;i++){
+    const ax=v.P[i-1][0],az=v.P[i-1][2],dx=v.P[i][0]-ax,dz=v.P[i][2]-az,l2=dx*dx+dz*dz||1;
+    const u=Math.max(0,Math.min(1,((p[0]-ax)*dx+(p[2]-az)*dz)/l2));
+    const d=Math.hypot(ax+u*dx-p[0],az+u*dz-p[2]);
+    if(d<best){best=d;bs=v.cum[i-1]+u*Math.sqrt(l2);}
+  }
+  return bs;
+}
+function puntoEn(v,s){
+  s=Math.max(0,Math.min(v.L,s));let i=1;
+  while(i<v.P.length-1&&v.cum[i]<s)i++;
+  const A=v.P[i-1],B=v.P[i],l=(v.cum[i]-v.cum[i-1])||1,u=(s-v.cum[i-1])/l;
+  return{x:A[0]+(B[0]-A[0])*u,y:A[1]+(B[1]-A[1])*u,z:A[2]+(B[2]-A[2])*u,tx:(B[0]-A[0])/l,tz:(B[2]-A[2])/l};
+}
+function estadoSem(S,t){
+  if(!S.f.length)return"verde";
+  let r=t%S.tot;
+  for(const f of S.f){if(r<f.duracion_s)return f.nombre;r-=f.duracion_s;}
+  return"verde";
+}
+function elegir(comp){
+  let tot=0;for(const[,p]of comp)tot+=p;let r=Math.random()*tot;
+  for(const[k,p]of comp){if((r-=p)<0)return k;}
+  return comp[0][0];
+}
+function spawn(w,dm){
+  const v=dm.v,dir=v.doble&&Math.random()<.5?-1:1,lane=Math.floor(Math.random()*v.nl),s=dir>0?0:v.L;
+  for(const c of w.veh)if(c.v===v&&c.dir===dir&&c.lane===lane&&Math.abs(c.s-s)<12)return;
+  const tipo=elegir(dm.comp),T=TIPOS[tipo]||TIPOS.autos;
+  w.veh.push({v,dir,lane,s,vel:Math.min(v.v0,6),v0:v.v0*T.f*(.9+.2*Math.random()),tipo,len:T.l});
+}
+function paso(w,dt){
+  w.t+=dt;
+  for(const S of w.sem)S.state=estadoSem(S,w.t);
+  for(const dm of w.dem){
+    if(w.t<dm.t0||w.t>dm.t1)continue;
+    dm.acc+=dm.rate*dt;
+    while(dm.acc>=1){dm.acc-=1;spawn(w,dm);}
+  }
+  const g={};
+  for(const c of w.veh)(g[c.v.d.id+"|"+c.dir+"|"+c.lane]??=[]).push(c);
+  for(const k in g){
+    const a=g[k],dir=a[0].dir;
+    a.sort((p,q)=>dir*(q.s-p.s)); // lider primero
+    for(let i=0;i<a.length;i++){
+      const c=a[i];let gap=1e9,vl=0;
+      if(i>0){const l=a[i-1];gap=Math.abs(l.s-c.s)-(l.len+c.len)/2;vl=l.vel;}
+      for(const o of w.obs){
+        if(o.v!==c.v||o.lane!==c.lane||c.dir<0||w.t<o.t0||w.t>o.t1)continue;
+        const d=o.s-c.s-c.len/2-2;if(d>-1&&d<gap){gap=d;vl=0;}
+      }
+      for(const sg of c.v.sig){
+        if(sg.S.state==="verde")continue;
+        const d=(c.dir>0?sg.sStop-c.s:c.s-sg.sStop)-c.len/2-1;
+        if(d>-1&&d<gap&&(sg.S.state==="rojo"||d>c.vel*c.vel/6)){gap=Math.max(d,.1);vl=0;}
+      }
+      const dv=c.vel-vl,ss=IDM.s0+Math.max(0,c.vel*IDM.T+c.vel*dv/(2*Math.sqrt(IDM.a*IDM.b)));
+      const ac=IDM.a*(1-Math.pow(c.vel/c.v0,4)-Math.pow(ss/Math.max(gap,.1),2));
+      c.vel=Math.max(0,c.vel+ac*dt);
+      c.s+=c.dir*c.vel*dt;
+    }
+  }
+  w.veh=w.veh.filter(c=>{const ok=c.s>=0&&c.s<=c.v.L;if(!ok)w.salidos++;return ok;});
+}
+
+/* ===== VISUALIZACION 3D (Three.js) ===== */
+const dark=matchMedia("(prefers-color-scheme: dark)").matches;
+const fondo=dark?0x0f1520:0xbcd4ea;
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(55,1,1,6000),rend=new THREE.WebGLRenderer({antialias:true});
+scene.background=new THREE.Color(fondo);
+document.getElementById("c").appendChild(rend.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x556655,.95));
+const sol=new THREE.DirectionalLight(0xffffff,.55);sol.position.set(200,400,100);scene.add(sol);
+let G=new THREE.Group(),mallas=new Map(),lluvia=null,semMesh=[],obsMesh=[];
+scene.add(G);
+const orb={t:new THREE.Vector3(),th:.9,ph:.95,d:500};
+function camara(){
+  cam.position.set(orb.t.x+orb.d*Math.sin(orb.ph)*Math.cos(orb.th),orb.t.y+orb.d*Math.cos(orb.ph),orb.t.z+orb.d*Math.sin(orb.ph)*Math.sin(orb.th));
+  cam.lookAt(orb.t);
+}
+const el=rend.domElement;let drag=null;
+el.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY};el.setPointerCapture(e.pointerId);});
+el.addEventListener("pointerup",()=>drag=null);
+el.addEventListener("pointermove",e=>{
+  if(!drag)return;
+  orb.th-=(e.clientX-drag.x)*.006;orb.ph=Math.max(.1,Math.min(1.5,orb.ph-(e.clientY-drag.y)*.006));
+  drag={x:e.clientX,y:e.clientY};camara();
+});
+el.addEventListener("wheel",e=>{e.preventDefault();orb.d*=e.deltaY>0?1.1:.91;camara();},{passive:false});
+function mat(c){return new THREE.MeshLambertMaterial({color:c});}
+function caja(l,h,a,c,x,y,z,ry){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(l,h,a),mat(c));
+  m.position.set(x,y,z);m.rotation.y=ry||0;G.add(m);return m;
+}
+
+function construir(j){
+  while(G.children.length)G.remove(G.children[0]);
+  mallas.clear();semMesh=[];obsMesh=[];
+  if(lluvia){scene.remove(lluvia);lluvia=null;}
+  W=crearMundo(j);
+  const e=j.escenario,xs=[],zs=[];
+  const reg=p=>{xs.push(p[0]);zs.push(p[2]);};
+  for(const v of Object.values(W.vias)){
+    v.P.forEach(reg);
+    const ancho=v.nc*v.anc;
+    for(let i=1;i<v.P.length;i++){
+      const A=v.P[i-1],B=v.P[i],l=Math.hypot(B[0]-A[0],B[2]-A[2]);
+      caja(l+1,.2,ancho,dark?0x3a404a:0x4b5159,(A[0]+B[0])/2,(A[1]+B[1])/2+.1,(A[2]+B[2])/2,-Math.atan2(B[2]-A[2],B[0]-A[0]));
+    }
+  }
+  for(const i of e.intersecciones||[]){
+    reg(i.posicion);
+    const m=new THREE.Mesh(new THREE.CircleGeometry(9,24),mat(0x575e67));
+    m.rotation.x=-Math.PI/2;m.position.set(i.posicion[0],i.posicion[1]+.15,i.posicion[2]);G.add(m);
+  }
+  for(const S of W.sem){
+    const[x,y,z]=S.pos;
+    caja(.5,7,.5,0x222222,x+8,y+3.5,z+8);
+    const b=new THREE.Mesh(new THREE.SphereGeometry(1.4,12,12),new THREE.MeshBasicMaterial({color:0x22cc55}));
+    b.position.set(x+8,y+8,z+8);G.add(b);semMesh.push({S,b});
+  }
+  for(const b of e.edificios||[]){
+    reg(b.posicion);const d=b.dimensiones||{};
+    caja(d.largo_m||10,d.altura_m||10,d.ancho_m||10,0x9aa5b1,b.posicion[0],b.posicion[1]+(d.altura_m||10)/2,b.posicion[2],-(b.rotacion_grados||0)*Math.PI/180);
+  }
+  for(const p of e.puentes||[]){
+    reg(p.posicion);const g=p.geometria||{},t=Math.max((p.estructura||{}).tablero_m||.5,.4),n=(p.estructura||{}).apoyos||0,ry=-(p.orientacion_grados||0)*Math.PI/180;
+    caja(g.longitud_m||40,t,g.ancho_m||8,0xb08968,p.posicion[0],p.posicion[1],p.posicion[2],ry);
+    for(let k=0;k<n;k++){
+      const u=n>1?k/(n-1)-.5:0,off=u*(g.longitud_m||40)*.8;
+      const c=new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,p.posicion[1],10),mat(0x8d6e63));
+      c.position.set(p.posicion[0]+Math.cos(ry)*off,p.posicion[1]/2,p.posicion[2]-Math.sin(ry)*off);G.add(c);
+    }
+  }
+  for(const o of W.obs){
+    obsMesh.push({o,m:caja(4,1.5,1.8,0xdd2222,0,.9,0)});
+  }
+  const x0=Math.min(...xs),x1=Math.max(...xs),z0=Math.min(...zs),z1=Math.max(...zs),ext=Math.max(x1-x0,z1-z0,100);
+  const suelo=new THREE.Mesh(new THREE.PlaneGeometry(ext*4,ext*4),mat(dark?0x1d2a22:0x7fa37a));
+  suelo.rotation.x=-Math.PI/2;suelo.position.set((x0+x1)/2,-.05,(z0+z1)/2);G.add(suelo);
+  orb.t.set((x0+x1)/2,0,(z0+z1)/2);orb.d=ext*1.2;camara();
+  // clima
+  const cl=e.clima||{},vis=cl.visibilidad_pct==null?100:cl.visibilidad_pct,far=300+vis/100*4000;
+  scene.fog=new THREE.Fog(fondo,far*.15,far);
+  if(cl.estado==="lluvia"){
+    const n={baja:800,media:2200,alta:4500}[cl.intensidad]||1500,pos=new Float32Array(n*3);
+    for(let i=0;i<n;i++){pos[i*3]=x0-ext/2+Math.random()*ext*2;pos[i*3+1]=Math.random()*120;pos[i*3+2]=z0-ext/2+Math.random()*ext*2;}
+    const gm=new THREE.BufferGeometry();gm.setAttribute("position",new THREE.BufferAttribute(pos,3));
+    lluvia=new THREE.Points(gm,new THREE.PointsMaterial({color:0x9ec3ff,size:1.2}));scene.add(lluvia);
+  }
+}
+
+function sincronizar(){
+  const col={verde:0x22cc55,amarillo:0xffcc00,rojo:0xee3333};
+  for(const{S,b}of semMesh)b.material.color.setHex(col[S.state]||0x22cc55);
+  for(const{o,m}of obsMesh){
+    const on=W.t>=o.t0&&W.t<=o.t1;m.visible=on;
+    if(on){const p=puntoEn(o.v,o.s),nx=-p.tz,nz=p.tx,off=(o.lane+.5)*o.v.anc*(o.v.doble?1:1)-(o.v.doble?0:(o.v.nc*o.v.anc)/2);
+      m.position.set(p.x+nx*off,p.y+.9,p.z+nz*off);m.rotation.y=-Math.atan2(p.tz,p.tx);}
+  }
+  const vivos=new Set(W.veh);
+  for(const[c,m]of mallas)if(!vivos.has(c)){G.remove(m);mallas.delete(c);}
+  for(const c of W.veh){
+    let m=mallas.get(c);
+    if(!m){const T=TIPOS[c.tipo]||TIPOS.autos;m=new THREE.Mesh(new THREE.BoxGeometry(T.l,T.h,T.w),mat(T.c));mallas.set(c,m);G.add(m);}
+    const p=puntoEn(c.v,c.s),nx=-p.tz,nz=p.tx,v=c.v;
+    const off=v.doble?c.dir*(c.lane+.5)*v.anc:(c.lane-(v.nc-1)/2)*v.anc;
+    m.position.set(p.x+nx*off,p.y+.2+m.geometry.parameters.height/2,p.z+nz*off);
+    m.rotation.y=-Math.atan2(p.tz*c.dir,p.tx*c.dir);
+  }
+  if(lluvia){const a=lluvia.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-1.2;a.setY(i,y<0?120:y);}a.needsUpdate=true;}
+}
+
+/* ===== Interfaz ===== */
+const $=id=>document.getElementById(id);
+let jsonActual=EJEMPLO,corriendo=true,vel=10,ult=performance.now();
+function cargar(j){
+  try{
+    if(!j||!j.escenario||!Array.isArray(j.escenario.vias))throw new Error("El JSON no tiene el formato de UrbanSimDSL (falta escenario.vias).");
+    jsonActual=j;construir(j);$("msg").textContent="";
+  }catch(e){$("msg").textContent=e.message;}
+}
+$("play").onclick=()=>{corriendo=!corriendo;$("play").textContent=corriendo?"⏸ Pausa":"▶ Reanudar";};
+$("spd").onchange=e=>vel=+e.target.value;
+$("rst").onclick=()=>cargar(jsonActual);
+$("ej").onclick=()=>cargar(EJEMPLO);
+$("zi").onclick=()=>{orb.d*=.85;camara();};
+$("zo").onclick=()=>{orb.d*=1.18;camara();};
+$("file").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{cargar(JSON.parse(r.result));}catch(x){$("msg").textContent="JSON inválido: "+x.message;}};
+  r.readAsText(f);e.target.value="";
+};
+function hud(){
+  const t=Math.floor(W.t),mm=String(Math.floor(t/60)).padStart(2,"0"),ss=String(t%60).padStart(2,"0");
+  const vm=W.veh.length?W.veh.reduce((a,c)=>a+c.vel,0)/W.veh.length*3.6:0;
+  const col={verde:"#22cc55",amarillo:"#ffcc00",rojo:"#ee3333"};
+  const evs=W.obs.filter(o=>W.t>=o.t0&&W.t<=o.t1).map(o=>o.id);
+  $("hud").innerHTML="<b>"+(jsonActual.escenario.nombre||"Escenario")+"</b><br>"+
+   "Tiempo: "+mm+":"+ss+" / "+Math.floor(W.fin/60)+" min<br>Vehículos: "+W.veh.length+" · salieron: "+W.salidos+
+   "<br>Vel. media: "+vm.toFixed(1)+" km/h"+
+   W.sem.map(s=>"<br><span class='dot' style='background:"+col[s.state]+"'></span>"+s.id+": "+s.state).join("")+
+   (evs.length?"<br>⚠ "+evs.join(", "):"");
+}
+function ajustar(){
+  const w=innerWidth,h=innerHeight;rend.setSize(w,h);rend.setPixelRatio(Math.min(devicePixelRatio,2));
+  cam.aspect=w/h;cam.updateProjectionMatrix();
+}
+addEventListener("resize",ajustar);
+function bucle(now){
+  const dt=Math.min((now-ult)/1000,.1);ult=now;
+  if(corriendo&&W&&W.t<W.fin){let r=dt*vel;while(r>0){const h=Math.min(.25,r);paso(W,h);r-=h;}}
+  if(W){sincronizar();hud();}
+  rend.render(scene,cam);requestAnimationFrame(bucle);
+}
+ajustar();cargar(EJEMPLO);requestAnimationFrame(bucle);
+</script>
+</body>
+</html>

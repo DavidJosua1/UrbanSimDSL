@@ -1,0 +1,81 @@
+{
+  "version": "1.0",
+  "variables": {},
+  "escenario": {
+    "nombre": "Simulacion_UNA",
+    "mapa": "UNA_Puno_3D",
+    "vias": [
+      {
+        "id": "Av_Universitaria",
+        "tipo": "avenida",
+        "puntos": [
+          [100, 0, 200],
+          [250, 0, 200],
+          [400, 0, 250]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.5,
+        "sentido": "doble",
+        "velocidad_max_kmh": 40
+      }
+    ],
+    "intersecciones": [
+      {
+        "id": "Interseccion_Central",
+        "posicion": [250, 0, 200],
+        "conecta": [
+          "Av_Universitaria"
+        ]
+      }
+    ],
+    "semaforos": [
+      {
+        "id": "Semaforo_Central",
+        "interseccion": "Interseccion_Central",
+        "ciclo_s": 65,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 30
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 5
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 30
+          }
+        ]
+      }
+    ],
+    "puentes": [],
+    "edificios": [],
+    "demandas": [
+      {
+        "id": "Hora_Punta",
+        "via": "Av_Universitaria",
+        "flujo_veh_h": 800,
+        "composicion_pct": {
+          "autos": 70,
+          "buses": 15,
+          "motos": 10,
+          "camiones": 5
+        },
+        "inicio_s": 0,
+        "duracion_s": 3600
+      }
+    ],
+    "eventos": [],
+    "clima": {
+      "estado": "despejado",
+      "intensidad": "baja",
+      "visibilidad_pct": 100
+    },
+    "simulacion": {
+      "duracion_s": 3600,
+      "intervalo_s": 1,
+      "repeticiones": 5
+    }
+  }
+}

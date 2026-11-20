@@ -1,0 +1,1013 @@
+{
+  "version": "1.0",
+  "variables": {
+    "v_campus": 20,
+    "v_calle": 30,
+    "v_avenida": 40,
+    "ancho_calle": 3.25,
+    "ancho_av": 3.5,
+    "carriles_av": 4,
+    "ciclo_a": 60,
+    "verde_a": 30,
+    "rojo_a": 26,
+    "ciclo_b": 90,
+    "verde_b": 50,
+    "rojo_b": 36,
+    "amarillo_std": 4,
+    "flujo_sesqui_pico": 1150,
+    "flujo_basadre_pico": 650,
+    "flujo_campus_pico": 400
+  },
+  "escenario": {
+    "nombre": "Simulacion_UNA_Puno_Campus",
+    "mapa": "UNA_Puno_3D",
+    "vias": [
+      {
+        "id": "Jr_Jorge_Basadre",
+        "tipo": "avenida",
+        "puntos": [
+          [-305, 0, -230],
+          [-345, 0, -130],
+          [-355, 0, -90],
+          [-285, 0, -33],
+          [-215, 0, 65],
+          [-155, 0, 150],
+          [-118, 0, 245],
+          [-95, 0, 343]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 30,
+        "capacidad_veh_h": 900
+      },
+      {
+        "id": "Av_Sesquicentenario",
+        "tipo": "avenida",
+        "puntos": [
+          [-95, 0, 343],
+          [-2, 0, 313],
+          [60, 0, 277],
+          [90, 3, 262],
+          [150, 3, 233],
+          [185, 0, 217],
+          [260, 0, 173],
+          [370, 0, 100]
+        ],
+        "carriles": 4,
+        "ancho_carril_m": 3.5,
+        "sentido": "doble",
+        "velocidad_max_kmh": 40,
+        "capacidad_veh_h": 2000
+      },
+      {
+        "id": "Jr_Jose_de_la_Mar",
+        "tipo": "calle",
+        "puntos": [
+          [370, 0, 100],
+          [355, 0, 47],
+          [335, 0, -10],
+          [315, 0, -35]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 30,
+        "capacidad_veh_h": 700
+      },
+      {
+        "id": "Jr_Selva_Alegre",
+        "tipo": "calle",
+        "puntos": [
+          [165, 0, -67],
+          [200, 0, -37],
+          [315, 0, -35]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 30,
+        "capacidad_veh_h": 700
+      },
+      {
+        "id": "Av_Universitaria",
+        "tipo": "avenida",
+        "puntos": [
+          [-285, 0, -33],
+          [-220, 0, -5],
+          [-150, 0, 27],
+          [-53, 0, 37],
+          [15, 0, 40],
+          [100, 0, 31],
+          [175, 0, 47],
+          [235, 0, 85],
+          [310, 0, 93],
+          [355, 0, 47]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.5,
+        "sentido": "doble",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 800
+      },
+      {
+        "id": "Eje_Central_Sur",
+        "tipo": "calle",
+        "puntos": [
+          [-50, 0, -17],
+          [-53, 0, 37],
+          [-54, 0, 65],
+          [-64, 0, 145],
+          [-80, 0, 235],
+          [-95, 0, 343]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 600
+      },
+      {
+        "id": "Anillo_Norte",
+        "tipo": "calle",
+        "puntos": [
+          [-135, 0, -97],
+          [-80, 0, -117],
+          [23, 0, -117],
+          [100, 0, -103],
+          [165, 0, -67]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 600
+      },
+      {
+        "id": "Acceso_Norte_Estadio",
+        "tipo": "calle",
+        "puntos": [
+          [-35, 0, -285],
+          [40, 0, -300],
+          [82, 0, -287],
+          [98, 3, -273],
+          [117, 3, -230],
+          [132, 0, -187],
+          [140, 0, -155],
+          [165, 0, -67]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 30,
+        "capacidad_veh_h": 700
+      },
+      {
+        "id": "Eje_Biomedicas",
+        "tipo": "calle",
+        "puntos": [
+          [25, 0, -215],
+          [23, 0, -117],
+          [22, 0, -35],
+          [15, 0, 40]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 500
+      },
+      {
+        "id": "Via_UNAP_Sesquicentenario",
+        "tipo": "calle",
+        "puntos": [
+          [175, 0, 47],
+          [172, 0, 107],
+          [178, 0, 165],
+          [185, 0, 217]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 500
+      },
+      {
+        "id": "Via_Logistica_Sur",
+        "tipo": "calle",
+        "puntos": [
+          [-64, 0, 145],
+          [0, 0, 147],
+          [58, 0, 143],
+          [68, 0, 205],
+          [60, 0, 277]
+        ],
+        "carriles": 1,
+        "ancho_carril_m": 3.5,
+        "sentido": "unico",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 400
+      },
+      {
+        "id": "Jr_Sinai",
+        "tipo": "calle",
+        "puntos": [
+          [-305, 0, -230],
+          [-215, 0, -237],
+          [-165, 0, -260],
+          [-135, 0, -295]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 30,
+        "capacidad_veh_h": 300
+      },
+      {
+        "id": "Via_Ingenierias_Norte",
+        "tipo": "calle",
+        "puntos": [
+          [-220, 0, -5],
+          [-202, 0, -55],
+          [-190, 0, -97],
+          [-135, 0, -97]
+        ],
+        "carriles": 2,
+        "ancho_carril_m": 3.25,
+        "sentido": "doble",
+        "velocidad_max_kmh": 20,
+        "capacidad_veh_h": 500
+      }
+    ],
+    "intersecciones": [
+      {
+        "id": "Int_Sinai_Basadre",
+        "posicion": [-305, 0, -230],
+        "conecta": [
+          "Jr_Jorge_Basadre",
+          "Jr_Sinai"
+        ]
+      },
+      {
+        "id": "Int_Puerta_Ingenierias",
+        "posicion": [-285, 0, -33],
+        "conecta": [
+          "Jr_Jorge_Basadre",
+          "Av_Universitaria"
+        ]
+      },
+      {
+        "id": "Int_Ingenierias_Norte",
+        "posicion": [-220, 0, -5],
+        "conecta": [
+          "Av_Universitaria",
+          "Via_Ingenierias_Norte"
+        ]
+      },
+      {
+        "id": "Int_Central",
+        "posicion": [-53, 0, 37],
+        "conecta": [
+          "Av_Universitaria",
+          "Eje_Central_Sur"
+        ]
+      },
+      {
+        "id": "Int_Biomedicas",
+        "posicion": [15, 0, 40],
+        "conecta": [
+          "Av_Universitaria",
+          "Eje_Biomedicas"
+        ]
+      },
+      {
+        "id": "Int_Norte_Biomedicas",
+        "posicion": [23, 0, -117],
+        "conecta": [
+          "Anillo_Norte",
+          "Eje_Biomedicas"
+        ]
+      },
+      {
+        "id": "Int_Piscina",
+        "posicion": [175, 0, 47],
+        "conecta": [
+          "Av_Universitaria",
+          "Via_UNAP_Sesquicentenario"
+        ]
+      },
+      {
+        "id": "Int_Selva_Alegre",
+        "posicion": [165, 0, -67],
+        "conecta": [
+          "Anillo_Norte",
+          "Acceso_Norte_Estadio",
+          "Jr_Selva_Alegre"
+        ]
+      },
+      {
+        "id": "Int_Servicio_Central",
+        "posicion": [-64, 0, 145],
+        "conecta": [
+          "Eje_Central_Sur",
+          "Via_Logistica_Sur"
+        ]
+      },
+      {
+        "id": "Int_Sesqui_Servicio",
+        "posicion": [60, 0, 277],
+        "conecta": [
+          "Av_Sesquicentenario",
+          "Via_Logistica_Sur"
+        ]
+      },
+      {
+        "id": "Int_Sesqui_UNAP",
+        "posicion": [185, 0, 217],
+        "conecta": [
+          "Av_Sesquicentenario",
+          "Via_UNAP_Sesquicentenario"
+        ]
+      },
+      {
+        "id": "Int_Rotonda_Sur",
+        "posicion": [-95, 0, 343],
+        "conecta": [
+          "Jr_Jorge_Basadre",
+          "Av_Sesquicentenario",
+          "Eje_Central_Sur"
+        ]
+      },
+      {
+        "id": "Int_JdlM_Sesqui",
+        "posicion": [370, 0, 100],
+        "conecta": [
+          "Av_Sesquicentenario",
+          "Jr_Jose_de_la_Mar"
+        ]
+      },
+      {
+        "id": "Int_JdlM_Universitaria",
+        "posicion": [355, 0, 47],
+        "conecta": [
+          "Av_Universitaria",
+          "Jr_Jose_de_la_Mar"
+        ]
+      },
+      {
+        "id": "Int_JdlM_Selva",
+        "posicion": [315, 0, -35],
+        "conecta": [
+          "Jr_Jose_de_la_Mar",
+          "Jr_Selva_Alegre"
+        ]
+      }
+    ],
+    "semaforos": [
+      {
+        "id": "Sem_Puerta_Ingenierias",
+        "interseccion": "Int_Puerta_Ingenierias",
+        "ciclo_s": 60,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 30
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 4
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 26
+          }
+        ]
+      },
+      {
+        "id": "Sem_Central",
+        "interseccion": "Int_Central",
+        "ciclo_s": 60,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 30
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 4
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 26
+          }
+        ]
+      },
+      {
+        "id": "Sem_Piscina",
+        "interseccion": "Int_Piscina",
+        "ciclo_s": 60,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 30
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 4
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 26
+          }
+        ]
+      },
+      {
+        "id": "Sem_Sesqui_UNAP",
+        "interseccion": "Int_Sesqui_UNAP",
+        "ciclo_s": 90,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 50
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 4
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 36
+          }
+        ]
+      },
+      {
+        "id": "Sem_Biomedicas",
+        "interseccion": "Int_Biomedicas",
+        "ciclo_s": 75,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 40
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 5
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 30
+          }
+        ]
+      },
+      {
+        "id": "Sem_Sesqui_Servicio",
+        "interseccion": "Int_Sesqui_Servicio",
+        "ciclo_s": 90,
+        "fases": [
+          {
+            "nombre": "verde",
+            "duracion_s": 50
+          },
+          {
+            "nombre": "amarillo",
+            "duracion_s": 4
+          },
+          {
+            "nombre": "rojo",
+            "duracion_s": 36
+          }
+        ]
+      }
+    ],
+    "puentes": [
+      {
+        "id": "Puente_Acceso_Estadio",
+        "tipo": "vehicular",
+        "posicion": [108, 3, -252],
+        "orientacion_grados": 66,
+        "geometria": {
+          "longitud_m": 48,
+          "ancho_m": 9,
+          "altura_m": 3
+        },
+        "calzada": {
+          "carriles": 2,
+          "ancho_carril_m": 3.5,
+          "sentido": "doble",
+          "velocidad_max_kmh": 30,
+          "capacidad_veh_h": 700
+        },
+        "estructura": {
+          "tablero_m": 0.5,
+          "apoyos": 3
+        },
+        "sobre": "Acceso_Norte_Estadio"
+      },
+      {
+        "id": "Puente_Canal_Sesquicentenario",
+        "tipo": "vehicular",
+        "posicion": [120, 3, 248],
+        "orientacion_grados": 334,
+        "geometria": {
+          "longitud_m": 68,
+          "ancho_m": 16,
+          "altura_m": 3
+        },
+        "calzada": {
+          "carriles": 4,
+          "ancho_carril_m": 3.5,
+          "sentido": "doble",
+          "velocidad_max_kmh": 40,
+          "capacidad_veh_h": 2000
+        },
+        "estructura": {
+          "tablero_m": 0.6,
+          "apoyos": 5
+        },
+        "sobre": "Av_Sesquicentenario"
+      }
+    ],
+    "edificios": [
+      {
+        "id": "Edificio_Rectorado",
+        "posicion": [-80, 0, -57],
+        "dimensiones": {
+          "largo_m": 50,
+          "ancho_m": 26,
+          "altura_m": 48
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Estacionamiento_Rectorado",
+        "posicion": [-148, 0, -55],
+        "dimensiones": {
+          "largo_m": 41,
+          "ancho_m": 20,
+          "altura_m": 3
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ing_Estadistica_Informatica",
+        "posicion": [-175, 0, -30],
+        "dimensiones": {
+          "largo_m": 46,
+          "ancho_m": 20,
+          "altura_m": 14
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ing_Economica",
+        "posicion": [90, 0, -43],
+        "dimensiones": {
+          "largo_m": 46,
+          "ancho_m": 28,
+          "altura_m": 15
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ciencias_Contables",
+        "posicion": [155, 0, -10],
+        "dimensiones": {
+          "largo_m": 40,
+          "ancho_m": 22,
+          "altura_m": 13
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ciencias_Sociales",
+        "posicion": [235, 0, 30],
+        "dimensiones": {
+          "largo_m": 44,
+          "ancho_m": 24,
+          "altura_m": 14
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ciencias_Biologicas",
+        "posicion": [295, 0, 40],
+        "dimensiones": {
+          "largo_m": 44,
+          "ancho_m": 24,
+          "altura_m": 14
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Biblioteca_Central",
+        "posicion": [52, 0, 77],
+        "dimensiones": {
+          "largo_m": 42,
+          "ancho_m": 24,
+          "altura_m": 17
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Comedor_Universitario",
+        "posicion": [-25, 0, 97],
+        "dimensiones": {
+          "largo_m": 32,
+          "ancho_m": 22,
+          "altura_m": 9
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Piscina_UNA",
+        "posicion": [110, 0, 73],
+        "dimensiones": {
+          "largo_m": 50,
+          "ancho_m": 26,
+          "altura_m": 10
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Pabellon_UNAP",
+        "posicion": [125, 0, 123],
+        "dimensiones": {
+          "largo_m": 36,
+          "ancho_m": 22,
+          "altura_m": 12
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ciencias_Agrarias",
+        "posicion": [125, 0, 170],
+        "dimensiones": {
+          "largo_m": 56,
+          "ancho_m": 26,
+          "altura_m": 12
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Coliseo_Cerrado",
+        "posicion": [5, 0, 185],
+        "dimensiones": {
+          "largo_m": 56,
+          "ancho_m": 40,
+          "altura_m": 15
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Facultad_Ing_Civil_Arquitectura",
+        "posicion": [-142, 0, 113],
+        "dimensiones": {
+          "largo_m": 44,
+          "ancho_m": 20,
+          "altura_m": 14
+        },
+        "rotacion_grados": 35
+      },
+      {
+        "id": "Facultad_Ing_Mecanica_Electrica",
+        "posicion": [-108, 0, 170],
+        "dimensiones": {
+          "largo_m": 40,
+          "ancho_m": 20,
+          "altura_m": 14
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Estacionamiento_Ingenierias",
+        "posicion": [-178, 0, 53],
+        "dimensiones": {
+          "largo_m": 42,
+          "ancho_m": 22,
+          "altura_m": 3
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Garita_Puerta_Ingenierias",
+        "posicion": [-268, 0, -50],
+        "dimensiones": {
+          "largo_m": 8,
+          "ancho_m": 6,
+          "altura_m": 4
+        },
+        "rotacion_grados": 0
+      },
+      {
+        "id": "Estadio_Monumental_UNA",
+        "posicion": [-95, 0, -205],
+        "dimensiones": {
+          "largo_m": 130,
+          "ancho_m": 90,
+          "altura_m": 25
+        },
+        "rotacion_grados": 0
+      }
+    ],
+    "demandas": [
+      {
+        "id": "Sesqui_Pre_Pico",
+        "via": "Av_Sesquicentenario",
+        "flujo_veh_h": 750,
+        "composicion_pct": {
+          "autos": 40,
+          "buses": 25,
+          "taxi": 15,
+          "motos": 12,
+          "camiones": 8
+        },
+        "inicio_s": 0,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Sesqui_Pico",
+        "via": "Av_Sesquicentenario",
+        "flujo_veh_h": 1150,
+        "composicion_pct": {
+          "autos": 38,
+          "buses": 28,
+          "taxi": 14,
+          "motos": 12,
+          "camiones": 8
+        },
+        "inicio_s": 1800,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Sesqui_Post_Pico",
+        "via": "Av_Sesquicentenario",
+        "flujo_veh_h": 800,
+        "composicion_pct": {
+          "autos": 40,
+          "buses": 25,
+          "taxi": 15,
+          "motos": 12,
+          "camiones": 8
+        },
+        "inicio_s": 3600,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Basadre_Pre_Pico",
+        "via": "Jr_Jorge_Basadre",
+        "flujo_veh_h": 420,
+        "composicion_pct": {
+          "autos": 45,
+          "buses": 18,
+          "taxi": 20,
+          "motos": 12,
+          "camiones": 5
+        },
+        "inicio_s": 0,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Basadre_Pico",
+        "via": "Jr_Jorge_Basadre",
+        "flujo_veh_h": 650,
+        "composicion_pct": {
+          "autos": 45,
+          "buses": 18,
+          "taxi": 20,
+          "motos": 12,
+          "camiones": 5
+        },
+        "inicio_s": 1800,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Basadre_Post_Pico",
+        "via": "Jr_Jorge_Basadre",
+        "flujo_veh_h": 450,
+        "composicion_pct": {
+          "autos": 45,
+          "buses": 18,
+          "taxi": 20,
+          "motos": 12,
+          "camiones": 5
+        },
+        "inicio_s": 3600,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Universitaria_Pre_Pico",
+        "via": "Av_Universitaria",
+        "flujo_veh_h": 260,
+        "composicion_pct": {
+          "autos": 55,
+          "buses": 10,
+          "taxi": 10,
+          "motos": 22,
+          "camiones": 3
+        },
+        "inicio_s": 0,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Universitaria_Pico",
+        "via": "Av_Universitaria",
+        "flujo_veh_h": 400,
+        "composicion_pct": {
+          "autos": 55,
+          "buses": 10,
+          "taxi": 10,
+          "motos": 22,
+          "camiones": 3
+        },
+        "inicio_s": 1800,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Universitaria_Post_Pico",
+        "via": "Av_Universitaria",
+        "flujo_veh_h": 280,
+        "composicion_pct": {
+          "autos": 55,
+          "buses": 10,
+          "taxi": 10,
+          "motos": 22,
+          "camiones": 3
+        },
+        "inicio_s": 3600,
+        "duracion_s": 1800
+      },
+      {
+        "id": "Flujo_Jose_de_la_Mar",
+        "via": "Jr_Jose_de_la_Mar",
+        "flujo_veh_h": 380,
+        "composicion_pct": {
+          "autos": 50,
+          "buses": 15,
+          "taxi": 20,
+          "motos": 10,
+          "camiones": 5
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Selva_Alegre",
+        "via": "Jr_Selva_Alegre",
+        "flujo_veh_h": 300,
+        "composicion_pct": {
+          "autos": 55,
+          "buses": 10,
+          "taxi": 15,
+          "motos": 15,
+          "camiones": 5
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Eje_Central",
+        "via": "Eje_Central_Sur",
+        "flujo_veh_h": 280,
+        "composicion_pct": {
+          "autos": 60,
+          "buses": 8,
+          "taxi": 12,
+          "motos": 18,
+          "camiones": 2
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Anillo_Norte",
+        "via": "Anillo_Norte",
+        "flujo_veh_h": 200,
+        "composicion_pct": {
+          "autos": 62,
+          "taxi": 10,
+          "motos": 25,
+          "camiones": 3
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Acceso_Estadio",
+        "via": "Acceso_Norte_Estadio",
+        "flujo_veh_h": 240,
+        "composicion_pct": {
+          "autos": 55,
+          "buses": 5,
+          "taxi": 15,
+          "motos": 15,
+          "camiones": 10
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Biomedicas",
+        "via": "Eje_Biomedicas",
+        "flujo_veh_h": 220,
+        "composicion_pct": {
+          "autos": 60,
+          "buses": 10,
+          "taxi": 5,
+          "motos": 25
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Salida_UNAP",
+        "via": "Via_UNAP_Sesquicentenario",
+        "flujo_veh_h": 260,
+        "composicion_pct": {
+          "autos": 55,
+          "buses": 12,
+          "taxi": 13,
+          "motos": 18,
+          "camiones": 2
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Logistica_Sur",
+        "via": "Via_Logistica_Sur",
+        "flujo_veh_h": 150,
+        "composicion_pct": {
+          "camiones": 35,
+          "autos": 35,
+          "motos": 20,
+          "buses": 10
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Sinai",
+        "via": "Jr_Sinai",
+        "flujo_veh_h": 160,
+        "composicion_pct": {
+          "autos": 65,
+          "motos": 20,
+          "taxi": 10,
+          "camiones": 5
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      },
+      {
+        "id": "Flujo_Ingenierias_Norte",
+        "via": "Via_Ingenierias_Norte",
+        "flujo_veh_h": 240,
+        "composicion_pct": {
+          "autos": 55,
+          "motos": 25,
+          "taxi": 10,
+          "buses": 8,
+          "camiones": 2
+        },
+        "inicio_s": 0,
+        "duracion_s": 5400
+      }
+    ],
+    "eventos": [
+      {
+        "id": "Accidente_Puente_Sesqui",
+        "tipo": "accidente",
+        "via": "Av_Sesquicentenario",
+        "carril": 2,
+        "inicio_s": 2100,
+        "duracion_s": 720
+      },
+      {
+        "id": "Accidente_Basadre",
+        "tipo": "accidente",
+        "via": "Jr_Jorge_Basadre",
+        "carril": 1,
+        "inicio_s": 1200,
+        "duracion_s": 600
+      },
+      {
+        "id": "Accidente_Av_Universitaria",
+        "tipo": "accidente",
+        "via": "Av_Universitaria",
+        "carril": 1,
+        "inicio_s": 3900,
+        "duracion_s": 480
+      }
+    ],
+    "clima": {
+      "estado": "lluvia",
+      "intensidad": "baja",
+      "visibilidad_pct": 85
+    },
+    "simulacion": {
+      "duracion_s": 5400,
+      "intervalo_s": 1,
+      "repeticiones": 5
+    }
+  }
+}

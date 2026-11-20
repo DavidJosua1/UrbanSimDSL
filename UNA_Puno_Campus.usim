@@ -1,0 +1,796 @@
+// ============================================================================
+//  UrbanSimDSL - Escenario: CAMPUS UNIVERSIDAD NACIONAL DEL ALTIPLANO (UNA) - PUNO
+//  Archivo : UNA_Puno_Campus.usim
+//  Fuente  : mapa de referencia del usuario (Jr. Jorge Basadre, Av. Sesquicentenario,
+//            Jr. Selva Alegre, Jr. Jose de la Mar, Puerta de Ingenierias, Fac. de
+//            Ingenieria Economica, Piscina UNA, UNAP) + ficha tecnica del proyecto
+//            (limite 20 km/h, horas pico, Biblioteca, Rectorado, Estadio, parqueos).
+//
+//  CONVENCION DE COORDENADAS (puntos y posiciones)
+//     - Unidad: metros. Escala del mapa: 1 px de la imagen = 1 m.
+//     - Origen (0,0,0): centro aproximado del campus (pixel 380,355 de la imagen).
+//     - x = este (+) / oeste (-)      z = sur (+) / norte (-)      y = elevacion relativa.
+//     - Las vias del simulador son corredores independientes: cada interseccion
+//       esta colocada EXACTAMENTE sobre un vertice de las vias que conecta, para que
+//       el semaforo proyecte bien su linea de detencion.
+//
+//  LINEA DE TIEMPO (t = 0 equivale a las 06:45, hora pico de ingreso)
+//     00-30 min  06:45-07:15  pre-pico       30-60 min  07:15-07:45  PICO
+//     60-90 min  07:45-08:15  post-pico      (simulacion total: 90 min)
+//
+//  NOTA: puentes y semaforos son propuestas de diseno (el mapa no los muestra);
+//        las posiciones de edificios no rotulados en el mapa son aproximadas.
+// ============================================================================
+
+// ---------------- Variables globales (se sustituyen por su valor en el JSON) ----------------
+var v_campus = 20          // limite interno del campus (kmh)
+var v_calle = 30           // calles perimetrales (kmh)
+var v_avenida = 40         // Av. Sesquicentenario (kmh)
+var ancho_calle = 3.25     // ancho de carril en calles (m)
+var ancho_av = 3.5         // ancho de carril en avenidas (m)
+var carriles_av = 4        // carriles totales de la Av. Sesquicentenario (entero)
+
+// Plan semaforico A (campus): 30 + 4 + 26 = 60 s
+var ciclo_a = 60
+var verde_a = 30
+var rojo_a = 26
+// Plan semaforico B (avenida): 50 + 4 + 36 = 90 s
+var ciclo_b = 90
+var verde_b = 50
+var rojo_b = 36
+var amarillo_std = 4
+
+// Flujos de hora pico (veh/h)
+var flujo_sesqui_pico = 1150
+var flujo_basadre_pico = 650
+var flujo_campus_pico = 400
+
+escenario "Simulacion_UNA_Puno_Campus" {
+mapa "UNA_Puno_3D"
+
+
+// ============================ VIAS ============================
+
+// Limite oeste del campus (Puerta de Ingenierias). Arteria urbana.
+via "Jr_Jorge_Basadre" {
+  tipo avenida
+  puntos [
+    (-305, 0, -230),
+    (-345, 0, -130),
+    (-355, 0, -90),
+    (-285, 0, -33),
+    (-215, 0, 65),
+    (-155, 0, 150),
+    (-118, 0, 245),
+    (-95, 0, 343)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_calle kmh
+  capacidad 900 veh_h
+}
+
+// Limite sur-este. Eje de combis/colectivos. Incluye rampas y el puente sobre el canal.
+via "Av_Sesquicentenario" {
+  tipo avenida
+  puntos [
+    (-95, 0, 343),
+    (-2, 0, 313),
+    (60, 0, 277),
+    (90, 3, 262),
+    (150, 3, 233),
+    (185, 0, 217),
+    (260, 0, 173),
+    (370, 0, 100)
+  ]
+  carriles carriles_av
+  ancho_carril ancho_av m
+  sentido doble
+  velocidad_max v_avenida kmh
+  capacidad 2000 veh_h
+}
+
+// Limite este del campus.
+via "Jr_Jose_de_la_Mar" {
+  tipo calle
+  puntos [
+    (370, 0, 100),
+    (355, 0, 47),
+    (335, 0, -10),
+    (315, 0, -35)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_calle kmh
+  capacidad 700 veh_h
+}
+
+// Limite nor-este.
+via "Jr_Selva_Alegre" {
+  tipo calle
+  puntos [
+    (165, 0, -67),
+    (200, 0, -37),
+    (315, 0, -35)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_calle kmh
+  capacidad 700 veh_h
+}
+
+// Eje interno principal oeste-este: Puerta de Ingenierias -> Biblioteca -> Piscina -> Jr. Jose de la Mar.
+via "Av_Universitaria" {
+  tipo avenida
+  puntos [
+    (-285, 0, -33),
+    (-220, 0, -5),
+    (-150, 0, 27),
+    (-53, 0, 37),
+    (15, 0, 40),
+    (100, 0, 31),
+    (175, 0, 47),
+    (235, 0, 85),
+    (310, 0, 93),
+    (355, 0, 47)
+  ]
+  carriles 2
+  ancho_carril ancho_av m
+  sentido doble
+  velocidad_max v_campus kmh
+  capacidad 800 veh_h
+}
+
+// Columna vertebral norte-sur del campus (Rectorado -> acceso sur).
+via "Eje_Central_Sur" {
+  tipo calle
+  puntos [
+    (-50, 0, -17),
+    (-53, 0, 37),
+    (-54, 0, 65),
+    (-64, 0, 145),
+    (-80, 0, 235),
+    (-95, 0, 343)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_campus kmh
+  capacidad 600 veh_h
+}
+
+// Anillo de facultades del sector norte.
+via "Anillo_Norte" {
+  tipo calle
+  puntos [
+    (-135, 0, -97),
+    (-80, 0, -117),
+    (23, 0, -117),
+    (100, 0, -103),
+    (165, 0, -67)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_campus kmh
+  capacidad 600 veh_h
+}
+
+// Acceso norte al Estadio Universitario (con puente).
+via "Acceso_Norte_Estadio" {
+  tipo calle
+  puntos [
+    (-35, 0, -285),
+    (40, 0, -300),
+    (82, 0, -287),
+    (98, 3, -273),
+    (117, 3, -230),
+    (132, 0, -187),
+    (140, 0, -155),
+    (165, 0, -67)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_calle kmh
+  capacidad 700 veh_h
+}
+
+// Eje vertical este (Biblioteca - Biomedicas - Estadio).
+via "Eje_Biomedicas" {
+  tipo calle
+  puntos [
+    (25, 0, -215),
+    (23, 0, -117),
+    (22, 0, -35),
+    (15, 0, 40)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_campus kmh
+  capacidad 500 veh_h
+}
+
+// Salida sur desde Piscina/UNAP hacia Av. Sesquicentenario.
+via "Via_UNAP_Sesquicentenario" {
+  tipo calle
+  puntos [
+    (175, 0, 47),
+    (172, 0, 107),
+    (178, 0, 165),
+    (185, 0, 217)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_campus kmh
+  capacidad 500 veh_h
+}
+
+// Via de servicio de un solo sentido (comedor, coliseo, abastecimiento).
+via "Via_Logistica_Sur" {
+  tipo calle
+  puntos [
+    (-64, 0, 145),
+    (0, 0, 147),
+    (58, 0, 143),
+    (68, 0, 205),
+    (60, 0, 277)
+  ]
+  carriles 1
+  ancho_carril ancho_av m
+  sentido unico
+  velocidad_max v_campus kmh
+  capacidad 400 veh_h
+}
+
+// Calle exterior noroeste (sector Sinai).
+via "Jr_Sinai" {
+  tipo calle
+  puntos [
+    (-305, 0, -230),
+    (-215, 0, -237),
+    (-165, 0, -260),
+    (-135, 0, -295)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_calle kmh
+  capacidad 300 veh_h
+}
+
+// Conexion Facultades de Ingenieria -> Anillo Norte.
+via "Via_Ingenierias_Norte" {
+  tipo calle
+  puntos [
+    (-220, 0, -5),
+    (-202, 0, -55),
+    (-190, 0, -97),
+    (-135, 0, -97)
+  ]
+  carriles 2
+  ancho_carril ancho_calle m
+  sentido doble
+  velocidad_max v_campus kmh
+  capacidad 500 veh_h
+}
+
+// ================== INTERSECCIONES Y SEMAFOROS ==================
+// 'anidado' = semaforo declarado dentro de la interseccion; 'externo' = semaforo
+// independiente que referencia la interseccion con  interseccion "..."
+
+interseccion "Int_Sinai_Basadre" {
+  posicion (-305, 0, -230)
+  conecta "Jr_Jorge_Basadre"
+  conecta "Jr_Sinai"
+}
+
+interseccion "Int_Puerta_Ingenierias" {
+  posicion (-285, 0, -33)
+  conecta "Jr_Jorge_Basadre"
+  conecta "Av_Universitaria"
+  semaforo "Sem_Puerta_Ingenierias" {
+    ciclo ciclo_a s
+    fase verde { duracion verde_a s }
+    fase amarillo { duracion amarillo_std s }
+    fase rojo { duracion rojo_a s }
+  }
+}
+
+interseccion "Int_Ingenierias_Norte" {
+  posicion (-220, 0, -5)
+  conecta "Av_Universitaria"
+  conecta "Via_Ingenierias_Norte"
+}
+
+interseccion "Int_Central" {
+  posicion (-53, 0, 37)
+  conecta "Av_Universitaria"
+  conecta "Eje_Central_Sur"
+  semaforo "Sem_Central" {
+    ciclo ciclo_a s
+    fase verde { duracion verde_a s }
+    fase amarillo { duracion amarillo_std s }
+    fase rojo { duracion rojo_a s }
+  }
+}
+
+interseccion "Int_Biomedicas" {
+  posicion (15, 0, 40)
+  conecta "Av_Universitaria"
+  conecta "Eje_Biomedicas"
+}
+
+interseccion "Int_Norte_Biomedicas" {
+  posicion (23, 0, -117)
+  conecta "Anillo_Norte"
+  conecta "Eje_Biomedicas"
+}
+
+interseccion "Int_Piscina" {
+  posicion (175, 0, 47)
+  conecta "Av_Universitaria"
+  conecta "Via_UNAP_Sesquicentenario"
+  semaforo "Sem_Piscina" {
+    ciclo ciclo_a s
+    fase verde { duracion verde_a s }
+    fase amarillo { duracion amarillo_std s }
+    fase rojo { duracion rojo_a s }
+  }
+}
+
+interseccion "Int_Selva_Alegre" {
+  posicion (165, 0, -67)
+  conecta "Anillo_Norte"
+  conecta "Acceso_Norte_Estadio"
+  conecta "Jr_Selva_Alegre"
+}
+
+interseccion "Int_Servicio_Central" {
+  posicion (-64, 0, 145)
+  conecta "Eje_Central_Sur"
+  conecta "Via_Logistica_Sur"
+}
+
+interseccion "Int_Sesqui_Servicio" {
+  posicion (60, 0, 277)
+  conecta "Av_Sesquicentenario"
+  conecta "Via_Logistica_Sur"
+}
+
+interseccion "Int_Sesqui_UNAP" {
+  posicion (185, 0, 217)
+  conecta "Av_Sesquicentenario"
+  conecta "Via_UNAP_Sesquicentenario"
+  semaforo "Sem_Sesqui_UNAP" {
+    ciclo ciclo_b s
+    fase verde { duracion verde_b s }
+    fase amarillo { duracion amarillo_std s }
+    fase rojo { duracion rojo_b s }
+  }
+}
+
+interseccion "Int_Rotonda_Sur" {
+  posicion (-95, 0, 343)
+  conecta "Jr_Jorge_Basadre"
+  conecta "Av_Sesquicentenario"
+  conecta "Eje_Central_Sur"
+}
+
+interseccion "Int_JdlM_Sesqui" {
+  posicion (370, 0, 100)
+  conecta "Av_Sesquicentenario"
+  conecta "Jr_Jose_de_la_Mar"
+}
+
+interseccion "Int_JdlM_Universitaria" {
+  posicion (355, 0, 47)
+  conecta "Av_Universitaria"
+  conecta "Jr_Jose_de_la_Mar"
+}
+
+interseccion "Int_JdlM_Selva" {
+  posicion (315, 0, -35)
+  conecta "Jr_Jose_de_la_Mar"
+  conecta "Jr_Selva_Alegre"
+}
+
+semaforo "Sem_Biomedicas" {
+  interseccion "Int_Biomedicas"
+  ciclo 75 s
+  fase verde { duracion 40 s }
+  fase amarillo { duracion 5 s }
+  fase rojo { duracion 30 s }
+}
+
+semaforo "Sem_Sesqui_Servicio" {
+  interseccion "Int_Sesqui_Servicio"
+  ciclo ciclo_b s
+  fase verde { duracion verde_b s }
+  fase amarillo { duracion amarillo_std s }
+  fase rojo { duracion rojo_b s }
+}
+
+// ============================ PUENTES ============================
+// y = 3 m en los vertices de la via que cubre el puente (rampas de acceso).
+
+// Cruce de la quebrada/canal de drenaje en el acceso norte al estadio
+puente "Puente_Acceso_Estadio" {
+  tipo vehicular
+  posicion (108, 3, -252)
+  orientacion 66 grados
+  sobre "Acceso_Norte_Estadio"
+  geometria { longitud 48 m ancho 9 m altura 3 m }
+  calzada { carriles 2 ancho_carril 3.5 m sentido doble velocidad_max 30 kmh capacidad 700 veh_h }
+  estructura { tablero 0.5 m apoyo 3 }
+}
+
+// Cruce del canal de drenaje sobre la Av. Sesquicentenario (4 carriles)
+puente "Puente_Canal_Sesquicentenario" {
+  tipo vehicular
+  posicion (120, 3, 248)
+  orientacion 334 grados
+  sobre "Av_Sesquicentenario"
+  geometria { longitud 68 m ancho 16 m altura 3 m }
+  calzada { carriles 4 ancho_carril 3.5 m sentido doble velocidad_max 40 kmh capacidad 2000 veh_h }
+  estructura { tablero 0.6 m apoyo 5 }
+}
+
+// ============================ EDIFICIOS ============================
+// Administracion central (15 pisos en la referencia, ~850 personas en hora pico).
+edificio "Edificio_Rectorado" {
+  posicion (-80, 0, -57)
+  dimensiones { largo 50 m ancho 26 m altura 48 m }
+  rotacion 0 grados
+}
+
+// 45 autos / 20 motos, solo docentes y administrativos.
+edificio "Estacionamiento_Rectorado" {
+  posicion (-148, 0, -55)
+  dimensiones { largo 41 m ancho 20 m altura 3 m }
+  rotacion 0 grados
+}
+
+// FINESI.
+edificio "Facultad_Ing_Estadistica_Informatica" {
+  posicion (-175, 0, -30)
+  dimensiones { largo 46 m ancho 20 m altura 14 m }
+  rotacion 0 grados
+}
+
+// Marcada en el mapa.
+edificio "Facultad_Ing_Economica" {
+  posicion (90, 0, -43)
+  dimensiones { largo 46 m ancho 28 m altura 15 m }
+  rotacion 0 grados
+}
+
+edificio "Facultad_Ciencias_Contables" {
+  posicion (155, 0, -10)
+  dimensiones { largo 40 m ancho 22 m altura 13 m }
+  rotacion 0 grados
+}
+
+edificio "Facultad_Ciencias_Sociales" {
+  posicion (235, 0, 30)
+  dimensiones { largo 44 m ancho 24 m altura 14 m }
+  rotacion 0 grados
+}
+
+edificio "Facultad_Ciencias_Biologicas" {
+  posicion (295, 0, 40)
+  dimensiones { largo 44 m ancho 24 m altura 14 m }
+  rotacion 0 grados
+}
+
+// 5 pisos, ~1200 personas en hora pico.
+edificio "Biblioteca_Central" {
+  posicion (52, 0, 77)
+  dimensiones { largo 42 m ancho 24 m altura 17 m }
+  rotacion 0 grados
+}
+
+// Pico de almuerzo 12:00-13:30.
+edificio "Comedor_Universitario" {
+  posicion (-25, 0, 97)
+  dimensiones { largo 32 m ancho 22 m altura 9 m }
+  rotacion 0 grados
+}
+
+// Marcada en el mapa.
+edificio "Piscina_UNA" {
+  posicion (110, 0, 73)
+  dimensiones { largo 50 m ancho 26 m altura 10 m }
+  rotacion 0 grados
+}
+
+// Marcador UNAP del mapa.
+edificio "Pabellon_UNAP" {
+  posicion (125, 0, 123)
+  dimensiones { largo 36 m ancho 22 m altura 12 m }
+  rotacion 0 grados
+}
+
+edificio "Facultad_Ciencias_Agrarias" {
+  posicion (125, 0, 170)
+  dimensiones { largo 56 m ancho 26 m altura 12 m }
+  rotacion 0 grados
+}
+
+edificio "Coliseo_Cerrado" {
+  posicion (5, 0, 185)
+  dimensiones { largo 56 m ancho 40 m altura 15 m }
+  rotacion 0 grados
+}
+
+// Alineada con Jr. Jorge Basadre.
+edificio "Facultad_Ing_Civil_Arquitectura" {
+  posicion (-142, 0, 113)
+  dimensiones { largo 44 m ancho 20 m altura 14 m }
+  rotacion 35 grados
+}
+
+edificio "Facultad_Ing_Mecanica_Electrica" {
+  posicion (-108, 0, 170)
+  dimensiones { largo 40 m ancho 20 m altura 14 m }
+  rotacion 0 grados
+}
+
+// 65 autos / 40 motos / 100 bicicletas, acceso diurno abierto.
+edificio "Estacionamiento_Ingenierias" {
+  posicion (-178, 0, 53)
+  dimensiones { largo 42 m ancho 22 m altura 3 m }
+  rotacion 0 grados
+}
+
+// Control de acceso peatonal y vehicular.
+edificio "Garita_Puerta_Ingenierias" {
+  posicion (-268, 0, -50)
+  dimensiones { largo 8 m ancho 6 m altura 4 m }
+  rotacion 0 grados
+}
+
+// Aforo ~25000 personas (referencia).
+edificio "Estadio_Monumental_UNA" {
+  posicion (-95, 0, -205)
+  dimensiones { largo 130 m ancho 90 m altura 25 m }
+  rotacion 0 grados
+}
+
+// ============================ DEMANDA (06:45 - 08:15) ============================
+demanda "Sesqui_Pre_Pico" {
+  via "Av_Sesquicentenario"
+  flujo 750 veh_h
+  composicion {
+    autos 40 % buses 25 % taxi 15 % motos 12 % camiones 8 %
+  }
+  inicio 0 min
+  duracion 30 min
+}
+
+demanda "Sesqui_Pico" {
+  via "Av_Sesquicentenario"
+  flujo flujo_sesqui_pico veh_h
+  composicion {
+    autos 38 % buses 28 % taxi 14 % motos 12 % camiones 8 %
+  }
+  inicio 30 min
+  duracion 30 min
+}
+
+demanda "Sesqui_Post_Pico" {
+  via "Av_Sesquicentenario"
+  flujo 800 veh_h
+  composicion {
+    autos 40 % buses 25 % taxi 15 % motos 12 % camiones 8 %
+  }
+  inicio 60 min
+  duracion 30 min
+}
+
+demanda "Basadre_Pre_Pico" {
+  via "Jr_Jorge_Basadre"
+  flujo 420 veh_h
+  composicion {
+    autos 45 % buses 18 % taxi 20 % motos 12 % camiones 5 %
+  }
+  inicio 0 min
+  duracion 30 min
+}
+
+demanda "Basadre_Pico" {
+  via "Jr_Jorge_Basadre"
+  flujo flujo_basadre_pico veh_h
+  composicion {
+    autos 45 % buses 18 % taxi 20 % motos 12 % camiones 5 %
+  }
+  inicio 30 min
+  duracion 30 min
+}
+
+demanda "Basadre_Post_Pico" {
+  via "Jr_Jorge_Basadre"
+  flujo 450 veh_h
+  composicion {
+    autos 45 % buses 18 % taxi 20 % motos 12 % camiones 5 %
+  }
+  inicio 60 min
+  duracion 30 min
+}
+
+demanda "Universitaria_Pre_Pico" {
+  via "Av_Universitaria"
+  flujo 260 veh_h
+  composicion {
+    autos 55 % buses 10 % taxi 10 % motos 22 % camiones 3 %
+  }
+  inicio 0 min
+  duracion 30 min
+}
+
+demanda "Universitaria_Pico" {
+  via "Av_Universitaria"
+  flujo flujo_campus_pico veh_h
+  composicion {
+    autos 55 % buses 10 % taxi 10 % motos 22 % camiones 3 %
+  }
+  inicio 30 min
+  duracion 30 min
+}
+
+demanda "Universitaria_Post_Pico" {
+  via "Av_Universitaria"
+  flujo 280 veh_h
+  composicion {
+    autos 55 % buses 10 % taxi 10 % motos 22 % camiones 3 %
+  }
+  inicio 60 min
+  duracion 30 min
+}
+
+demanda "Flujo_Jose_de_la_Mar" {
+  via "Jr_Jose_de_la_Mar"
+  flujo 380 veh_h
+  composicion {
+    autos 50 % buses 15 % taxi 20 % motos 10 % camiones 5 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Selva_Alegre" {
+  via "Jr_Selva_Alegre"
+  flujo 300 veh_h
+  composicion {
+    autos 55 % buses 10 % taxi 15 % motos 15 % camiones 5 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Eje_Central" {
+  via "Eje_Central_Sur"
+  flujo 280 veh_h
+  composicion {
+    autos 60 % buses 8 % taxi 12 % motos 18 % camiones 2 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Anillo_Norte" {
+  via "Anillo_Norte"
+  flujo 200 veh_h
+  composicion {
+    autos 62 % taxi 10 % motos 25 % camiones 3 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Acceso_Estadio" {
+  via "Acceso_Norte_Estadio"
+  flujo 240 veh_h
+  composicion {
+    autos 55 % bus 5 % taxi 15 % motos 15 % camiones 10 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Biomedicas" {
+  via "Eje_Biomedicas"
+  flujo 220 veh_h
+  composicion {
+    autos 60 % buses 10 % taxi 5 % motos 25 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Salida_UNAP" {
+  via "Via_UNAP_Sesquicentenario"
+  flujo 260 veh_h
+  composicion {
+    autos 55 % buses 12 % taxi 13 % motos 18 % camiones 2 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Logistica_Sur" {
+  via "Via_Logistica_Sur"
+  flujo 150 veh_h
+  composicion {
+    camiones 35 % autos 35 % motos 20 % buses 10 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Sinai" {
+  via "Jr_Sinai"
+  flujo 160 veh_h
+  composicion {
+    auto 65 % motos 20 % taxi 10 % camiones 5 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+demanda "Flujo_Ingenierias_Norte" {
+  via "Via_Ingenierias_Norte"
+  flujo 240 veh_h
+  composicion {
+    autos 55 % motos 25 % taxi 10 % buses 8 % camiones 2 %
+  }
+  inicio 0 min
+  duracion 90 min
+}
+
+// ============================ EVENTOS ============================
+// Incidente sobre el puente de la Av. Sesquicentenario en pleno pico
+evento "Accidente_Puente_Sesqui" {
+  tipo accidente
+  via "Av_Sesquicentenario"
+  carril 2
+  inicio 35 min
+  duracion 12 min
+}
+// Choque en la Puerta de Ingenierias durante el pre-pico
+evento "Accidente_Basadre" {
+  tipo accidente
+  via "Jr_Jorge_Basadre"
+  carril 1
+  inicio 20 min
+  duracion 10 min
+}
+// Bloqueo en la avenida interna durante el post-pico
+evento "Accidente_Av_Universitaria" {
+  tipo accidente
+  via "Av_Universitaria"
+  carril 1
+  inicio 65 min
+  duracion 8 min
+}
+
+// ============================ CLIMA ============================
+// Inicio de temporada de lluvias en Puno. Para un dia seco: estado despejado / visibilidad 100 %
+clima {
+  estado lluvia
+  intensidad baja
+  visibilidad 85 %
+}
+
+// ============================ SIMULACION ============================
+simulacion {
+  duracion 90 min
+  intervalo 1 s
+  repeticiones 5
+}
+}

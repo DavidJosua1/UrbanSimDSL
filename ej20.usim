@@ -1,0 +1,54 @@
+escenario "Simulacion_UNA" {
+mapa "UNA_Puno_3D"
+via "Av_Universitaria" {
+tipo avenida
+puntos [
+(100, 0, 200),
+(250, 0, 200),
+(400, 0, 250)
+]
+carriles 2
+ancho_carril 3.5 m
+sentido doble
+velocidad_max 40 kmh
+}
+interseccion "Interseccion_Central" {
+posicion (250, 0, 200)
+conecta "Av_Universitaria"
+}
+semaforo "Semaforo_Central" {
+interseccion "Interseccion_Central"
+fase verde {
+duracion 30 s
+}
+fase amarillo {
+duracion 5 s
+}
+fase rojo {
+duracion 30 s
+}
+ciclo 65 s
+}
+demanda "Hora_Punta" {
+via "Av_Universitaria"
+flujo 800 veh_h
+composicion {
+autos 70 %
+buses 15 %
+motos 10 %
+camiones 5 %
+}
+inicio 0 min
+duracion 60 min
+}
+clima {
+estado despejado
+intensidad baja
+visibilidad 100 %
+}
+simulacion {
+duracion 60 min
+intervalo 1 s
+repeticiones 5
+}
+}
